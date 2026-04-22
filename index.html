@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【授業用】守くんの日常と防衛機制</title>
+    <style>
+        :root {
+            --tokai-blue: #004098;
+            --tokai-yellow: #ffcc00;
+            --tokai-light: #e6f0ff;
+            --primary: var(--tokai-blue);
+            --bg: #f0f2f5;
+            --card: #ffffff;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            color: #333;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card);
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        header {
+            background: var(--tokai-blue);
+            background-image: linear-gradient(90deg, transparent 50%, rgba(255,255,255,0.1) 50%);
+            background-size: 20px 100%;
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.3rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            border-bottom: 5px solid var(--tokai-yellow);
+        }
+
+        nav {
+            display: flex;
+            background: #e9ecef;
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #555;
+            border-bottom: 4px solid transparent;
+        }
+
+        .nav-item.active {
+            color: var(--tokai-blue);
+            border-bottom: 4px solid var(--tokai-blue);
+            background: white;
+        }
+
+        .content {
+            padding: 20px;
+            flex: 1;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* 画像エリア */
+        .image-wrapper {
+            width: 100%;
+            height: 320px;
+            background: #e6f0ff;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border: 3px solid var(--tokai-blue);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .char-msg {
+            background: #fff;
+            border: 2px solid var(--tokai-blue);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 8px solid var(--tokai-yellow);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .choice-btn {
+            background: white;
+            border: 2px solid var(--tokai-blue);
+            padding: 15px 10px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--tokai-blue);
+            cursor: pointer;
+        }
+
+        .choice-btn:hover:not(:disabled) {
+            background: var(--tokai-blue);
+            color: white;
+        }
+
+        .feedback-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            border: 2px solid transparent;
+        }
+
+        .feedback-correct { background: #e6fffb; border-color: #00b894; color: #006b56; }
+        .feedback-wrong { background: #fff1f0; border-color: #d63031; color: #a8071a; }
+
+        .action-btn {
+            background: var(--tokai-blue);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 18px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--tokai-blue);
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>SAGAMI PRIDE：心の防衛機制</header>
+    
+    <nav>
+        <div id="nav-study" class="nav-item active" onclick="showScreen('study')">プロローグ</div>
+        <div id="nav-quiz" class="nav-item" onclick="showScreen('quiz')">ストーリー</div>
+        <div id="nav-dict" class="nav-item" onclick="showScreen('dict')">解説図鑑</div>
+    </nav>
+
+    <div class="content">
+        <!-- Prologue -->
+        <div id="screen-study" class="screen active">
+            <div class="image-wrapper">
+                <img id="img-prologue" src="mamoru.prologue.jpg" alt="守くん（プロローグ）">
+            </div>
+            <div class="char-msg">
+                「僕は守。相模のタテジマを背負う高校生だ！僕の『心のクセ（防衛機制）』をクイズで見抜いてくれ！」
+            </div>
+            <button class="action-btn" onclick="showScreen('quiz')">ストーリーを開始する</button>
+        </div>
+
+        <!-- Quiz -->
+        <div id="screen-quiz" class="screen">
+            <div id="quiz-init">
+                <div class="image-wrapper">
+                    <img id="img-init" src="mamoru.quiz.jpg" alt="野球部の守くん">
+                </div>
+                <h3>相模の日常：9つの試練</h3>
+                <p>部活動での葛藤や、学校生活での不安。守くんの心の動きに隠された名前を当てましょう。</p>
+                <button class="action-btn" onclick="startQuiz()">スタート</button>
+            </div>
+
+            <div id="quiz-play" style="display:none;">
+                <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+                <div class="image-wrapper">
+                    <img id="img-quiz" src="mamoru.quiz.jpg" alt="守くん">
+                </div>
+                <div id="q-scene" class="char-msg"></div>
+                <div id="q-text" class="question-text"></div>
+                <div id="choice-list" class="btn-grid"></div>
+                <div id="feedback" class="feedback-box"></div>
+                <button id="next-q-btn" class="action-btn" style="display:none;" onclick="nextQuestion()">次へ ▶</button>
+            </div>
+
+            <div id="quiz-result" style="display:none; text-align:center;">
+                <div class="image-wrapper">
+                    <img id="img-result" src="mamoru.epilogue.jpg" alt="卒業の守くん">
+                </div>
+                <h3>スコアレポート</h3>
+                <div id="result-score" style="font-size:2.5rem; font-weight:bold; color:var(--tokai-blue);">0 / 9</div>
+                <button class="action-btn" onclick="startQuiz()">リトライ</button>
+            </div>
+        </div>
+
+        <!-- Dictionary -->
+        <div id="screen-dict" class="screen">
+            <h3>防衛機制：解説図鑑</h3>
+            <div id="dict-list"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // GitHub公開用に静的な画像ファイル名を使用するように修正
+    // HTMLと同じフォルダに以下の画像ファイルを置いてください
+    const IMAGE_FILES = {
+        prologue: "mamoru.prologue.jpg",
+        quiz: "mamoru.quiz.jpg",
+        result: "mamoru.epilogue.jpg"
+    };
+
+    const masterData = [
+        { name: "抑圧", scene: "負けた試合の記憶...", q: "「あのアウト？...なんだか、思い出せないんだ。」", desc: "苦痛な記憶を無意識に押し込めています。" },
+        { name: "合理化", scene: "選挙に落ちた...", q: "「勉強時間が増えるから、落ちて正解だったんだ。」", desc: "自分に都合の良い理由で正当化しています。" },
+        { name: "同一視", scene: "憧れの先輩...", q: "「先輩と同じグローブを使って、僕もプロの気分だよ。」", desc: "他者の価値を取り込んで自分を高めようとしています。" },
+        { name: "投射", scene: "苦手な奴がいる...", q: "「あいつ、絶対僕のこと嫌ってるよね。」", desc: "自分の負の感情を、相手が持っているとすり替えます。" },
+        { name: "反動形成", scene: "怖いコーチに...", q: "「コーチ！大好きです！」と過剰に愛想よくする。", desc: "本心とは逆の行動で不安を解消します。" },
+        { name: "逃避", scene: "テスト前...", q: "「勉強しなきゃ...でも漫画が面白いな。」", desc: "困難から別な快楽へ逃げています。" },
+        { name: "退行", scene: "嫉妬して...", q: "「お母さーん、靴下履かせてー！」", desc: "子供のような行動に戻って安心を得ようとします。" },
+        { name: "代償", scene: "怪我で野球ができず...", q: "「今はプログラミングでトップを取るよ！」", desc: "別の目標で欲求を満たそうとしています。" },
+        { name: "昇華", scene: "不安を...", q: "「このもやもやをぶつけて、油絵を描き上げたんだ。」", desc: "衝動を社会的に価値あるものへ転換します。" }
+    ];
+
+    let currentQuizIndex = 0;
+    let score = 0;
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('screen-' + screenId).classList.add('active');
+        document.getElementById('nav-' + screenId).classList.add('active');
+        if(screenId === 'dict') renderDictionary();
+    }
+
+    function startQuiz() {
+        document.getElementById('quiz-init').style.display = 'none';
+        document.getElementById('quiz-result').style.display = 'none';
+        document.getElementById('quiz-play').style.display = 'block';
+        currentQuizIndex = 0;
+        score = 0;
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const item = masterData[currentQuizIndex];
+        
+        document.getElementById('q-scene').innerText = item.scene;
+        document.getElementById('q-text').innerText = item.q;
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('next-q-btn').style.display = 'none';
+        document.getElementById('progress-fill').style.width = `${((currentQuizIndex + 1) / 9) * 100}%`;
+
+        const choiceArea = document.getElementById('choice-list');
+        choiceArea.innerHTML = "";
+        const choices = [item.name, ...masterData.filter(m => m.name !== item.name).sort(() => Math.random() - 0.5).slice(0, 3).map(m => m.name)].sort(() => Math.random() - 0.5);
+
+        choices.forEach(c => {
+            const btn = document.createElement('button');
+            btn.className = "choice-btn";
+            btn.innerText = c;
+            btn.onclick = () => checkAnswer(c, item.name, item.desc);
+            choiceArea.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(user, ans, desc) {
+        document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+        const fb = document.getElementById('feedback');
+        fb.style.display = 'block';
+        if (user === ans) {
+            score++;
+            fb.className = "feedback-box feedback-correct";
+            fb.innerHTML = `<strong>正解！</strong><br>${desc}`;
+        } else {
+            fb.className = "feedback-box feedback-wrong";
+            fb.innerHTML = `<strong>不正解... 正解は【${ans}】</strong><br>${desc}`;
+        }
+        document.getElementById('next-q-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        currentQuizIndex++;
+        if (currentQuizIndex < 9) loadQuestion();
+        else {
+            document.getElementById('quiz-play').style.display = 'none';
+            document.getElementById('quiz-result').style.display = 'block';
+            document.getElementById('result-score').innerText = `${score} / 9`;
+        }
+    }
+
+    function renderDictionary() {
+        const list = document.getElementById('dict-list');
+        list.innerHTML = masterData.map(item => `
+            <div style="background:#fff; padding:15px; border-radius:10px; margin-bottom:10px; border-left:5px solid var(--tokai-blue); box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                <strong>${item.name}</strong>
+                <p style="font-size:0.85rem; color:#666; margin-top:5px;">${item.desc}</p>
+            </div>
+        `).join('');
+    }
+
+    window.onload = () => {
+        renderDictionary();
+    };
+</script>
+</body>
+</html>
