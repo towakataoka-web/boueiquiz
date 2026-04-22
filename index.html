@@ -83,7 +83,6 @@
             display: block;
         }
 
-        /* 画像エリア */
         .image-wrapper {
             width: 100%;
             height: 320px;
@@ -104,6 +103,33 @@
             object-fit: cover;
             display: block;
         }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid var(--tokai-yellow);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .char-msg {
             background: #fff;
@@ -140,6 +166,7 @@
             font-weight: bold;
             color: var(--tokai-blue);
             cursor: pointer;
+            transition: 0.2s;
         }
 
         .choice-btn:hover:not(:disabled) {
@@ -202,10 +229,14 @@
         <!-- Prologue -->
         <div id="screen-study" class="screen active">
             <div class="image-wrapper">
-                <img id="img-prologue" src="mamoru.prologue.jpg" alt="守くん（プロローグ）">
+                <div id="loader-prologue" class="loading-overlay">
+                    <div class="spinner"></div>
+                    <div>AIが守くんを生成中...</div>
+                </div>
+                <img id="img-prologue" src="mamoru.prologue.jpg" alt="守くん">
             </div>
             <div class="char-msg">
-                「僕は守。相模のタテジマを背負う高校生だ！僕の『心のクセ（防衛機制）』をクイズで見抜いてくれ！」
+                「僕は守。相模のタテジマを背負う高校生だ！高校生活は楽しいことばかりじゃない。悔しい時、不安な時、僕の心がどんな『守り』に入っているか、クイズで見抜いてくれ！」
             </div>
             <button class="action-btn" onclick="showScreen('quiz')">ストーリーを開始する</button>
         </div>
@@ -214,6 +245,10 @@
         <div id="screen-quiz" class="screen">
             <div id="quiz-init">
                 <div class="image-wrapper">
+                    <div id="loader-init" class="loading-overlay">
+                        <div class="spinner"></div>
+                        <div>生成中...</div>
+                    </div>
                     <img id="img-init" src="mamoru.quiz.jpg" alt="野球部の守くん">
                 </div>
                 <h3>相模の日常：9つの試練</h3>
@@ -226,7 +261,7 @@
                 <div class="image-wrapper">
                     <img id="img-quiz" src="mamoru.quiz.jpg" alt="守くん">
                 </div>
-                <div id="q-scene" class="char-msg"></div>
+                <div id="q-scene" class="char-msg" style="font-weight:bold; color:var(--tokai-blue); background:var(--tokai-light);"></div>
                 <div id="q-text" class="question-text"></div>
                 <div id="choice-list" class="btn-grid"></div>
                 <div id="feedback" class="feedback-box"></div>
@@ -235,7 +270,7 @@
 
             <div id="quiz-result" style="display:none; text-align:center;">
                 <div class="image-wrapper">
-                    <img id="img-result" src="mamoru.epilogue.jpg" alt="卒業の守くん">
+                    <img id="img-result" src="mamoru.epilogue.jpg" alt="結果">
                 </div>
                 <h3>スコアレポート</h3>
                 <div id="result-score" style="font-size:2.5rem; font-weight:bold; color:var(--tokai-blue);">0 / 9</div>
@@ -252,25 +287,107 @@
 </div>
 
 <script>
-    // GitHub公開用に静的な画像ファイル名を使用するように修正
-    // HTMLと同じフォルダに以下の画像ファイルを置いてください
-    const IMAGE_FILES = {
-        prologue: "mamoru.prologue.jpg",
-        quiz: "mamoru.quiz.jpg",
-        result: "mamoru.epilogue.jpg"
-    };
+    const apiKey = ""; // 実行環境以外では空
 
     const masterData = [
-        { name: "抑圧", scene: "負けた試合の記憶...", q: "「あのアウト？...なんだか、思い出せないんだ。」", desc: "苦痛な記憶を無意識に押し込めています。" },
-        { name: "合理化", scene: "選挙に落ちた...", q: "「勉強時間が増えるから、落ちて正解だったんだ。」", desc: "自分に都合の良い理由で正当化しています。" },
-        { name: "同一視", scene: "憧れの先輩...", q: "「先輩と同じグローブを使って、僕もプロの気分だよ。」", desc: "他者の価値を取り込んで自分を高めようとしています。" },
-        { name: "投射", scene: "苦手な奴がいる...", q: "「あいつ、絶対僕のこと嫌ってるよね。」", desc: "自分の負の感情を、相手が持っているとすり替えます。" },
-        { name: "反動形成", scene: "怖いコーチに...", q: "「コーチ！大好きです！」と過剰に愛想よくする。", desc: "本心とは逆の行動で不安を解消します。" },
-        { name: "逃避", scene: "テスト前...", q: "「勉強しなきゃ...でも漫画が面白いな。」", desc: "困難から別な快楽へ逃げています。" },
-        { name: "退行", scene: "嫉妬して...", q: "「お母さーん、靴下履かせてー！」", desc: "子供のような行動に戻って安心を得ようとします。" },
-        { name: "代償", scene: "怪我で野球ができず...", q: "「今はプログラミングでトップを取るよ！」", desc: "別の目標で欲求を満たそうとしています。" },
-        { name: "昇華", scene: "不安を...", q: "「このもやもやをぶつけて、油絵を描き上げたんだ。」", desc: "衝動を社会的に価値あるものへ転換します。" }
+        { 
+            name: "抑圧", 
+            scene: "試合での痛恨のミス...", 
+            q: "「あのアウト？...なんだか、その瞬間のことだけ思い出せないんだ。」", 
+            desc: "【抑圧】苦痛な記憶や欲求を、無意識の中に押し込めて忘れてしまうことです。" 
+        },
+        { 
+            name: "合理化", 
+            scene: "生徒会選挙で落選...", 
+            q: "「これで勉強に集中できる時間が増えるから、落ちて正解だったんだ。」", 
+            desc: "【合理化】失敗した時に自分に都合の良い理由をつけて、もっともらしく正当化することです。" 
+        },
+        { 
+            name: "同一視", 
+            scene: "プロ野球選手への憧れ...", 
+            q: "「憧れの先輩と同じメーカーのグローブを使えば、僕もプロ級のプレーができる気がする！」", 
+            desc: "【同一視】自分より優れた他者の特性を自分のものと思い込み、満足感を得ることです。" 
+        },
+        { 
+            name: "投射", 
+            scene: "部内の人間関係...", 
+            q: "「あいつ、絶対僕のこと嫌ってるよね。目も合わせてくれないし、冷たすぎるよ。」（実は自分が相手を苦手だと思っている）", 
+            desc: "【投射（投影）】自分が持っている後ろめたい感情を、相手が持っているものとして転嫁することです。" 
+        },
+        { 
+            name: "反動形成", 
+            scene: "厳しくて嫌いなコーチに...", 
+            q: "「コーチ！いつもご指導ありがとうございます！」と、誰よりも元気に愛想よく振る舞う。", 
+            desc: "【反動形成】抑圧した本心とは正反対の極端な態度や行動をとることです。" 
+        },
+        { 
+            name: "逃避", 
+            scene: "大事な期末テスト前...", 
+            q: "「勉強しなきゃいけないのは分かってるんだけど...つい漫画の続きが気になって読んじゃうんだ。」", 
+            desc: "【逃避】直面している困難や不安から、空想や別な快楽、病気の世界へ逃げ込むことです。" 
+        },
+        { 
+            name: "退行", 
+            scene: "弟が生まれて寂しい...", 
+            q: "「お母さーん、自分でお着替えできないからやってー！」と甘えて泣き出した。", 
+            desc: "【退行】耐えがたい状況に直面した際、より幼い段階の振る舞いに戻って保護を求めることです。" 
+        },
+        { 
+            name: "代償", 
+            scene: "怪我で野球を断念...", 
+            q: "「野球はもうできないけど、これからはプログラミングで全国トップを目指して頑張るよ！」", 
+            desc: "【代償】満たされなかった欲求を、別の目標を達成することで補おうとすることです。" 
+        },
+        { 
+            name: "昇華", 
+            scene: "溜まったストレスを...", 
+            q: "「このやり場のない怒りをぶつけて、巨大なキャンバスに油絵を描き上げたんだ。名作だよ！」", 
+            desc: "【昇華】社会的に認められない衝動を、芸術やスポーツなど価値ある活動へ転換することです。" 
+        }
     ];
+
+    async function fetchWithRetry(url, options, maxRetries = 3) {
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (err) {
+                if (i === maxRetries - 1) throw err;
+                await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+            }
+        }
+    }
+
+    async function generateMamoruImage(elementId, loaderId, promptSuffix) {
+        if (!apiKey) return;
+
+        const loader = document.getElementById(loaderId);
+        if(loader) loader.style.display = 'flex';
+
+        const prompt = `Japanese high school boy named Mamoru, short black hair, wearing vertical blue stripes baseball uniform, anime style, high quality, ${promptSuffix}`;
+        
+        try {
+            const result = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    instances: { prompt: prompt },
+                    parameters: { sampleCount: 1 }
+                })
+            });
+
+            if (result && result.predictions && result.predictions[0]) {
+                const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                const img = document.getElementById(elementId);
+                img.src = imageUrl;
+                img.onload = () => { if(loader) loader.style.display = 'none'; };
+            }
+        } catch (error) {
+            console.error("AI Generation failed.", error);
+            if(loader) loader.style.display = 'none';
+        }
+    }
 
     let currentQuizIndex = 0;
     let score = 0;
@@ -280,7 +397,10 @@
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('screen-' + screenId).classList.add('active');
         document.getElementById('nav-' + screenId).classList.add('active');
-        if(screenId === 'dict') renderDictionary();
+        
+        if(screenId === 'study' && apiKey && !document.getElementById('img-prologue').src.includes('data:image')) {
+            generateMamoruImage('img-prologue', 'loader-prologue', 'waving hand, smiling');
+        }
     }
 
     function startQuiz() {
@@ -294,12 +414,20 @@
 
     function loadQuestion() {
         const item = masterData[currentQuizIndex];
+        const img = document.getElementById('img-quiz');
+        const prologueImg = document.getElementById('img-prologue');
         
-        document.getElementById('q-scene').innerText = item.scene;
+        if(prologueImg.src.includes('data:image')) {
+            img.src = prologueImg.src;
+        } else {
+            img.src = 'mamoru.quiz.jpg';
+        }
+        
+        document.getElementById('q-scene').innerText = `シーン${currentQuizIndex + 1}: ${item.scene}`;
         document.getElementById('q-text').innerText = item.q;
         document.getElementById('feedback').style.display = 'none';
         document.getElementById('next-q-btn').style.display = 'none';
-        document.getElementById('progress-fill').style.width = `${((currentQuizIndex + 1) / 9) * 100}%`;
+        document.getElementById('progress-fill').style.width = `${((currentQuizIndex + 1) / masterData.length) * 100}%`;
 
         const choiceArea = document.getElementById('choice-list');
         choiceArea.innerHTML = "";
@@ -321,21 +449,24 @@
         if (user === ans) {
             score++;
             fb.className = "feedback-box feedback-correct";
-            fb.innerHTML = `<strong>正解！</strong><br>${desc}`;
+            fb.innerHTML = `<strong>正解！⭕</strong><br>${desc}`;
         } else {
             fb.className = "feedback-box feedback-wrong";
-            fb.innerHTML = `<strong>不正解... 正解は【${ans}】</strong><br>${desc}`;
+            fb.innerHTML = `<strong>残念...❌ 正解は【${ans}】</strong><br>${desc}`;
         }
         document.getElementById('next-q-btn').style.display = 'block';
     }
 
     function nextQuestion() {
         currentQuizIndex++;
-        if (currentQuizIndex < 9) loadQuestion();
+        if (currentQuizIndex < masterData.length) loadQuestion();
         else {
             document.getElementById('quiz-play').style.display = 'none';
             document.getElementById('quiz-result').style.display = 'block';
-            document.getElementById('result-score').innerText = `${score} / 9`;
+            document.getElementById('result-score').innerText = `${score} / ${masterData.length}`;
+            const resImg = document.getElementById('img-result');
+            const proImg = document.getElementById('img-prologue');
+            if(proImg.src.includes('data:image')) resImg.src = proImg.src;
         }
     }
 
@@ -343,13 +474,17 @@
         const list = document.getElementById('dict-list');
         list.innerHTML = masterData.map(item => `
             <div style="background:#fff; padding:15px; border-radius:10px; margin-bottom:10px; border-left:5px solid var(--tokai-blue); box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                <strong>${item.name}</strong>
-                <p style="font-size:0.85rem; color:#666; margin-top:5px;">${item.desc}</p>
+                <strong style="color:var(--tokai-blue); font-size:1.1rem;">${item.name}</strong>
+                <p style="font-size:0.9rem; color:#333; margin-top:8px; line-height:1.5;">${item.desc}</p>
             </div>
         `).join('');
     }
 
     window.onload = () => {
+        if (apiKey) {
+            generateMamoruImage('img-prologue', 'loader-prologue', 'waving hand, smiling');
+            generateMamoruImage('img-init', 'loader-init', 'holding a baseball bat, determined look');
+        }
         renderDictionary();
     };
 </script>
